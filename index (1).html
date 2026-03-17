@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cards Against Leasing</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Special+Elite&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root {
+  --black:#080808;--white:#f4efe4;--red:#c0392b;--red-dk:#8b2819;--gold:#c9971a;
+  --g1:#161616;--g2:#242424;--g3:#363636;--muted:#666;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--black);color:var(--white);font-family:'Special Elite',cursive;min-height:100vh;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,.007) 3px,rgba(255,255,255,.007) 4px);pointer-events:none;z-index:9998;}
+.screen{display:none;min-height:100vh;}
+.screen.active{display:flex;flex-direction:column;align-items:center;}
+/* TYPO */
+.logo{font-family:'Bebas Neue',sans-serif;font-size:clamp(36px,7vw,66px);letter-spacing:3px;line-height:1;}
+.red{color:var(--red);text-shadow:3px 3px 0 var(--red-dk);}
+.tagline{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;}
+/* BTNS */
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 28px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;cursor:pointer;border:none;transition:all .12s;}
+.btn-p{background:var(--white);color:var(--black);box-shadow:4px 4px 0 var(--red);}
+.btn-p:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--red);}
+.btn-p:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--red);}
+.btn-p:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-g{background:transparent;color:var(--white);border:2px solid var(--g3);}
+.btn-g:hover{border-color:var(--white);}
+/* INPUTS */
+input[type=text],input[type=number]{width:100%;background:var(--black);border:2px solid var(--g3);color:var(--white);padding:10px 14px;font-family:'Special Elite',cursive;font-size:17px;outline:none;transition:border-color .2s;}
+input:focus{border-color:var(--white);}
+.field{margin-bottom:14px;}
+.field label{display:block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+/* PANEL */
+.panel{background:var(--g1);border:2px solid var(--g2);padding:24px;}
+.ptitle{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;border-bottom:2px solid var(--red);padding-bottom:10px;margin-bottom:18px;}
+.divider{width:100%;height:1px;background:var(--g2);margin:14px 0;}
+
+/* ── TITLE ── */
+#title-screen{justify-content:center;padding:40px 16px;background:radial-gradient(ellipse at center,#1a1008,var(--black) 65%);text-align:center;gap:14px;}
+.card-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.mc{width:76px;height:106px;border-radius:5px;display:flex;align-items:flex-end;padding:7px;font-size:8.5px;line-height:1.3;font-family:'DM Mono',monospace;transform:rotate(var(--r));transition:transform .3s;box-shadow:3px 3px 0 rgba(0,0,0,.5);}
+.mc:hover{transform:rotate(0) translateY(-6px);}
+.mc.b{background:var(--black);color:var(--white);border:2px solid #2a2a2a;}
+.mc.w{background:var(--white);color:var(--black);border:2px solid #ddd;}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:480px;width:100%;}
+@media(max-width:500px){.mode-grid{grid-template-columns:1fr;}}
+.mcard{background:var(--g1);border:2px solid var(--g2);padding:20px;cursor:pointer;transition:all .15s;text-align:left;}
+.mcard:hover{border-color:var(--red);transform:translateY(-3px);}
+.mcard h3{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;margin-bottom:6px;}
+.mcard p{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);line-height:1.6;}
+.badge{display:inline-block;padding:2px 8px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;margin-bottom:8px;}
+.badge.r{background:var(--red);color:var(--white);}
+.badge.gd{background:var(--gold);color:var(--black);}
+
+/* SETUP NOTICE */
+#setup-notice{max-width:660px;width:100%;padding:0 16px;display:none;}
+.nbox{background:#120800;border:2px solid var(--gold);padding:26px 30px;}
+.nbox h2{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--gold);letter-spacing:2px;margin-bottom:12px;}
+.nbox ol{padding-left:20px;line-height:2.1;font-size:13px;color:#ccc;font-family:'DM Mono',monospace;}
+.nbox code{background:#000;padding:2px 6px;color:var(--gold);}
+.nbox a{color:var(--gold);}
+
+/* ── HOST LOBBY ── */
+#host-screen{padding:24px 16px;}
+.lh{display:flex;justify-content:space-between;align-items:flex-start;max-width:860px;width:100%;margin-bottom:22px;flex-wrap:wrap;gap:10px;}
+.lgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:860px;width:100%;}
+@media(max-width:640px){.lgrid{grid-template-columns:1fr;}}
+#qrcode{background:var(--white);padding:12px;display:inline-block;}
+.rcode{font-family:'Bebas Neue',sans-serif;font-size:50px;letter-spacing:8px;color:var(--gold);text-shadow:3px 3px 0 #5a4000;text-align:center;margin:8px 0;}
+.jlink{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);word-break:break-all;background:var(--g2);padding:8px 10px;cursor:pointer;text-align:center;}
+.jlink:hover{color:var(--white);}
+.chips{display:flex;flex-wrap:wrap;gap:8px;min-height:54px;align-content:flex-start;}
+.chip{background:var(--g2);border:1px solid var(--g3);padding:6px 14px;font-family:'DM Mono',monospace;font-size:12px;display:flex;align-items:center;gap:6px;animation:popIn .3s ease;}
+.cdot{width:7px;height:7px;background:var(--gold);border-radius:50%;flex-shrink:0;}
+@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+.blink{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);animation:bl 2s infinite;}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── JOIN ── */
+#join-screen{justify-content:center;padding:40px 16px;}
+.jbox{background:var(--g1);border:2px solid var(--g2);padding:34px 30px;width:100%;max-width:400px;text-align:center;}
+.jerr{color:var(--red);font-family:'DM Mono',monospace;font-size:12px;margin-top:10px;display:none;}
+
+/* ── PLAYER WAIT ── */
+#player-wait-screen{justify-content:center;padding:40px 16px;}
+.wbox{background:var(--g1);border:2px solid var(--g2);padding:40px 30px;max-width:440px;width:100%;text-align:center;}
+.wname{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;color:var(--gold);}
+
+/* ── GAME HOST ── */
+#game-host-screen{padding:18px 16px;}
+.ghdr{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:880px;border-bottom:2px solid var(--g2);padding-bottom:14px;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.srow{display:flex;gap:8px;flex-wrap:wrap;}
+.sc{background:var(--g2);border:1px solid var(--g3);padding:4px 12px;font-family:'DM Mono',monospace;font-size:12px;display:flex;align-items:center;gap:7px;}
+.sc.czar{border-color:var(--gold);}
+.sc .pt{background:var(--red);color:#fff;padding:1px 6px;min-width:22px;text-align:center;}
+.sc.czar .pt{background:var(--gold);color:var(--black);}
+.bcard{background:var(--black);border:3px solid var(--g2);padding:26px 30px;font-size:clamp(14px,2.5vw,20px);line-height:1.6;max-width:560px;width:100%;box-shadow:6px 6px 0 var(--red);position:relative;margin-bottom:18px;}
+.bcard::after{content:'♠';position:absolute;bottom:12px;right:14px;font-size:16px;color:#1e1e1e;}
+.blank{display:inline-block;border-bottom:3px solid var(--white);min-width:90px;vertical-align:bottom;margin:0 3px;}
+.ctag{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--gold);margin-bottom:10px;}
+.sbar{background:var(--g1);border:1px solid var(--g2);padding:12px 16px;max-width:560px;width:100%;font-family:'DM Mono',monospace;font-size:12px;display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.dots{display:inline-flex;gap:4px;}
+.dots span{width:6px;height:6px;background:var(--gold);border-radius:50%;animation:bo 1.2s infinite;}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes bo{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+.schips{display:flex;flex-wrap:wrap;gap:8px;max-width:560px;width:100%;margin-bottom:12px;}
+.sch{background:var(--g2);border:1px solid var(--g3);padding:5px 12px;font-family:'DM Mono',monospace;font-size:12px;color:#888;}
+.sch.done{border-color:#2a6a2a;color:#6bcf6b;}
+.sch.done::before{content:'✓ ';}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:14px;max-width:880px;width:100%;margin-bottom:18px;}
+.scard{background:var(--white);color:var(--black);padding:18px 16px 30px;font-size:13px;line-height:1.5;cursor:pointer;border:3px solid transparent;transition:all .14s;font-family:'Special Elite',cursive;box-shadow:4px 4px 0 #555;position:relative;animation:fu .4s ease both;}
+@keyframes fu{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.scard::after{content:'♠';position:absolute;bottom:9px;right:11px;font-size:12px;color:#bbb;}
+.scard:hover{transform:translateY(-5px);box-shadow:4px 9px 0 #333;border-color:var(--black);}
+.scard.win{border-color:var(--gold);box-shadow:4px 4px 0 var(--gold);}
+
+/* ── PLAYER PLAY ── */
+#player-play-screen{padding:16px 14px;}
+.phdr{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:600px;border-bottom:2px solid var(--g2);padding-bottom:12px;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.ptag{background:var(--red);color:var(--white);padding:4px 12px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;}
+.bmini{background:var(--black);border:2px solid var(--g2);padding:16px 18px;font-size:14px;line-height:1.6;max-width:600px;width:100%;box-shadow:4px 4px 0 var(--red);position:relative;margin-bottom:14px;}
+.bmini::after{content:'♠';position:absolute;bottom:9px;right:12px;font-size:12px;color:#1e1e1e;}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;max-width:600px;width:100%;margin-bottom:14px;}
+.wc{background:var(--white);color:var(--black);padding:12px 10px 26px;font-size:12.5px;line-height:1.4;cursor:pointer;border:3px solid transparent;transition:all .13s;font-family:'Special Elite',cursive;min-height:88px;box-shadow:3px 3px 0 #888;position:relative;}
+.wc::after{content:'♠';position:absolute;bottom:7px;right:9px;font-size:11px;color:#ccc;}
+.wc:hover{transform:translateY(-4px);box-shadow:3px 7px 0 #444;border-color:var(--black);}
+.wc.sel{border-color:var(--red);box-shadow:3px 3px 0 var(--red);}
+.wc.sub{opacity:.35;cursor:not-allowed;pointer-events:none;}
+.pbar{background:var(--g1);border:2px solid var(--g2);padding:14px 16px;max-width:600px;width:100%;margin-bottom:12px;}
+.plbl{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.ptxt{font-size:14px;line-height:1.6;color:#aaa;font-style:italic;min-height:32px;}
+.czwait{background:var(--g1);border:2px dashed var(--g3);padding:34px;max-width:600px;width:100%;text-align:center;font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);}
+
+/* ── WINNER OVERLAY ── */
+#wo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:1000;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;}
+#wo.show{display:flex;animation:fi .4s ease;}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.wbig{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,10vw,80px);color:var(--gold);text-shadow:4px 4px 0 #5a4000;line-height:1;}
+.wcard{background:var(--white);color:var(--black);padding:18px 22px;font-size:15px;line-height:1.5;max-width:400px;font-family:'Special Elite',cursive;box-shadow:6px 6px 0 var(--gold);margin:12px 0;}
+.wsen{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:16px;max-width:400px;}
+
+/* ── GAME OVER ── */
+#gameover-screen{justify-content:center;padding:40px 16px;text-align:center;}
+.fscores{display:flex;flex-direction:column;gap:8px;max-width:380px;width:100%;margin:18px 0;}
+.frow{display:flex;justify-content:space-between;align-items:center;background:var(--g1);padding:10px 16px;border-left:4px solid var(--g3);font-family:'DM Mono',monospace;font-size:14px;}
+.frow.top{border-left-color:var(--gold);}
+.dbox{background:var(--g1);border-left:4px solid var(--red);padding:16px 20px;max-width:460px;text-align:left;font-size:13px;line-height:1.7;color:#aaa;}
+.dbox strong{color:var(--white);display:block;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--white);color:var(--black);padding:10px 22px;font-family:'DM Mono',monospace;font-size:13px;box-shadow:4px 4px 0 var(--red);transition:transform .3s;z-index:9000;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.rtag{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);}
+.gap8{display:flex;gap:8px;flex-wrap:wrap;}
+.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt18{margin-top:18px;}.mt24{margin-top:24px;}
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<div id="title-screen" class="screen active">
+  <div class="logo" style="margin-top:40px;">Cards Against <span class="red">Leasing</span></div>
+  <div class="tagline" style="margin:6px 0 22px;">A horrible game for horrible leasing scenarios</div>
+  <div class="card-row">
+    <div class="mc b" style="--r:-6deg">When the prospect asks about ___, I just...</div>
+    <div class="mc w" style="--r:3deg">Blaming it on the market</div>
+    <div class="mc b" style="--r:-2deg">Our renewal rate dropped because of ___.</div>
+    <div class="mc w" style="--r:5deg">Forgetting their pet policy</div>
+  </div>
+  <div class="mode-grid">
+    <div class="mcard" onclick="initHost()">
+      <div class="badge gd">HOST</div>
+      <h3>Host a Game</h3>
+      <p>Generate a QR code. Players join on their own phones and pick cards privately.</p>
+    </div>
+    <div class="mcard" onclick="showScreen('join-screen')">
+      <div class="badge r">JOIN</div>
+      <h3>Join a Game</h3>
+      <p>Scan the QR or enter the room code to play on your own device.</p>
+    </div>
+  </div>
+  <div id="setup-notice" style="display:none;max-width:660px;width:100%;padding:0 16px;margin-top:14px;">
+    <div class="nbox">
+      <h2>⚙️ Firebase Setup — One Time Only</h2>
+      <p style="color:#aaa;font-size:12px;font-family:'DM Mono',monospace;margin-bottom:12px;">Real multiplayer QR joining requires a free Firebase project (5 min setup):</p>
+      <ol>
+        <li>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a></li>
+        <li><strong>Add Project</strong> → name it anything → skip Analytics</li>
+        <li>Left menu: <strong>Build → Realtime Database → Create Database</strong></li>
+        <li>Choose region → <strong>Start in test mode</strong> → Enable</li>
+        <li>Go to <strong>Project Settings ⚙️ → Your Apps → &lt;/&gt; Web</strong></li>
+        <li>Register app → copy the <code>firebaseConfig</code> object values</li>
+        <li>Open this HTML file in any text editor, paste values into the config section near the top</li>
+        <li>Save and reopen — players can now scan and join! 🎉</li>
+      </ol>
+      <p style="color:var(--muted);font-size:11px;font-family:'DM Mono',monospace;margin-top:12px;">Free tier: 100 simultaneous connections, no credit card needed.</p>
+    </div>
+  </div>
+</div>
+
+<!-- HOST LOBBY -->
+<div id="host-screen" class="screen">
+  <div class="lh" style="padding:22px 16px 0;">
+    <div><div class="logo">Cards Against <span class="red">Leasing</span></div><div class="tagline" style="margin-top:4px;">Hosting a Game</div></div>
+    <button class="btn btn-g" onclick="showScreen('title-screen')">← Back</button>
+  </div>
+  <div class="lgrid" style="padding:0 16px;">
+    <div class="panel">
+      <div class="ptitle">📱 Players — Scan to Join</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+        <div id="qrcode"></div>
+        <div class="rcode" id="rcode">----</div>
+        <div class="tagline">Room Code</div>
+        <div class="jlink" id="jlink" onclick="copyLink()" title="Click to copy">Generating...</div>
+        <div class="tagline mt8" style="text-align:center;">Players scan QR code or visit the link above</div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ptitle">Players Joined</div>
+      <div class="chips" id="pchips"><div class="blink">Waiting for players to join...</div></div>
+      <div class="divider"></div>
+      <div class="field">
+        <label>Points to Win</label>
+        <input type="number" id="wpts" value="5" min="1" max="20" style="width:80px;">
+      </div>
+      <button class="btn btn-p" id="sbtn" disabled onclick="hostStart()">Start Game →</button>
+      <div class="tagline mt8" id="shint">Need at least 3 players</div>
+    </div>
+  </div>
+</div>
+
+<!-- JOIN -->
+<div id="join-screen" class="screen" style="justify-content:center;padding:40px 16px;">
+  <div class="jbox">
+    <div class="logo" style="font-size:30px;margin-bottom:4px;">Cards Against <span class="red">Leasing</span></div>
+    <div class="tagline" style="margin-bottom:22px;">Enter your name &amp; room code</div>
+    <div class="field"><label>Your Name</label><input type="text" id="jname" placeholder="e.g. Alex" maxlength="20" autocomplete="off"></div>
+    <div class="field"><label>Room Code</label><input type="text" id="jcode" placeholder="e.g. LEAS" maxlength="6" style="text-transform:uppercase;letter-spacing:4px;" autocomplete="off"></div>
+    <button class="btn btn-p" style="width:100%;" onclick="joinGame()">Join Game →</button>
+    <div class="jerr" id="jerr"></div>
+    <button class="btn btn-g mt12" style="width:100%;" onclick="showScreen('title-screen')">← Back</button>
+  </div>
+</div>
+
+<!-- PLAYER WAIT -->
+<div id="player-wait-screen" class="screen" style="justify-content:center;padding:40px 16px;">
+  <div class="wbox">
+    <div style="font-size:42px;margin-bottom:10px;">🃏</div>
+    <div class="wname" id="pwname">Player</div>
+    <div class="tagline" style="margin-top:6px;animation:bl 2s infinite;">You're in! Waiting for host to start...</div>
+    <div class="divider"></div>
+    <div id="pwlist" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;"></div>
+  </div>
+</div>
+
+<!-- GAME HOST -->
+<div id="game-host-screen" class="screen">
+  <div class="ghdr" style="padding:16px 16px 14px;">
+    <div class="logo" style="font-size:24px;">Cards Against <span class="red">Leasing</span></div>
+    <div class="rtag" id="hround">Round 1</div>
+    <div class="srow" id="hscores"></div>
+  </div>
+  <div style="width:100%;max-width:880px;padding:0 16px;">
+    <div class="ctag" id="hczar">⭐ Card Czar: —</div>
+    <div class="bcard" id="hblack">Loading...</div>
+    <div class="sbar" id="hsbar"><div class="dots"><span></span><span></span><span></span></div><span>Waiting for all players to submit...</span></div>
+    <div class="schips" id="hschips"></div>
+    <button class="btn btn-p" id="hrevbtn" onclick="hostReveal()" style="display:none;margin-bottom:14px;">Reveal Cards →</button>
+    <div id="hjudge" style="display:none;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--muted);margin-bottom:14px;">⭐ Czar — Tap the Winner!</div>
+      <div class="sgrid" id="hsgrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYER PLAY -->
+<div id="player-play-screen" class="screen">
+  <div class="phdr" style="padding:14px 14px 12px;">
+    <div class="ptag" id="ppname">Player</div>
+    <div class="rtag" id="ppround">Round 1</div>
+    <div class="sc" id="ppsc"><span class="pt" id="pppts">0</span> pts</div>
+  </div>
+  <div style="width:100%;max-width:600px;padding:0 14px;">
+    <!-- Czar view -->
+    <div id="pczar" style="display:none;">
+      <div class="czwait">
+        <div style="font-size:36px;margin-bottom:10px;">⭐</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;margin-bottom:8px;">You're the Card Czar</div>
+        Relax while others submit their cards.<br>Watch the host screen — you'll judge the answers there!
+      </div>
+      <div class="bmini mt12" id="pczarblack"></div>
+    </div>
+    <!-- Normal view -->
+    <div id="pnormal">
+      <div class="bmini" id="pblack">Loading...</div>
+      <div class="pbar"><div class="plbl">Preview</div><div class="ptxt" id="ppreview">Select a card below to preview...</div></div>
+      <div class="hgrid" id="phand"></div>
+      <button class="btn btn-p" id="psubmit" onclick="submitCard()" style="display:none;margin-bottom:8px;">Submit Card →</button>
+      <div id="psubmsg" style="display:none;font-family:'DM Mono',monospace;font-size:13px;color:var(--gold);letter-spacing:1px;padding:10px 0;">✓ Submitted! Waiting for others...</div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div id="gameover-screen" class="screen" style="justify-content:center;padding:40px 16px;text-align:center;">
+  <div class="tagline" style="margin-bottom:6px;">Game Over</div>
+  <div class="wbig" id="gowinner">Player</div>
+  <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);margin-bottom:18px;letter-spacing:2px;">WINS CARDS AGAINST LEASING</div>
+  <div class="fscores" id="goscores"></div>
+  <div class="dbox">
+    <strong>🎓 Training Debrief</strong>
+    Now that you've laughed — which answers actually happen in your leasing office? What should the right response have been?
+  </div>
+  <button class="btn btn-g mt18" onclick="location.reload()">Play Again</button>
+</div>
+
+<!-- WINNER OVERLAY -->
+<div id="wo">
+  <div class="tagline" style="margin-bottom:6px;letter-spacing:3px;">ROUND WINNER</div>
+  <div class="wbig" id="woname">Player</div>
+  <div class="wcard" id="wocard">Card</div>
+  <div class="wsen" id="wosen"></div>
+  <button class="btn btn-p" onclick="nextRound()">Next Round →</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+// ═══════════════════════════════════
+//  PASTE YOUR FIREBASE CONFIG HERE
+// ═══════════════════════════════════
+const FB = {
+  apiKey: "AIzaSyD7culsoagStOtrDAz7UfouNtJukBaNPGY",
+  authDomain: "cards-against-leasing.firebaseapp.com",
+  databaseURL: "https://cards-against-leasing-default-rtdb.firebaseio.com",
+  projectId: "cards-against-leasing",
+  storageBucket: "cards-against-leasing.firebasestorage.app",
+  messagingSenderId: "690808288708",
+  appId: "1:690808288708:web:3593065582ff6817bb2091"
+};
+// ═══════════════════════════════════
+
+const NOT_CONFIGURED = Object.values(FB).some(v=>v.startsWith("PASTE_"));
+if(NOT_CONFIGURED) document.getElementById('setup-notice').style.display='block';
+
+// ── CARDS ──
+const BC=[
+  "The prospect walked in unannounced. Instead of giving a tour, I ___.",
+  "Halfway through the tour, the prospect went quiet. I recovered by ___.",
+  "The model unit wasn't ready, so I handled the tour by ___.",
+  "When the prospect said 'I need to think about it,' I responded with ___.",
+  "I always start my tours by ___.",
+  "The prospect loved the apartment but hated the price. I closed them with ___.",
+  "I forgot to mention ___ during the tour. They found out on move-in day.",
+  "To make the tour more memorable, I ___.",
+  "The prospect asked how we compare to the community down the street. I said ___.",
+  "My go-to technique for getting a same-day signature is ___.",
+  "When the prospect said the unit felt small, I pointed out ___.",
+  "The best question to ask a prospect during a tour is ___.",
+  "When a prospect tours with their partner who hates everything, I ___.",
+  "The prospect said they were just looking. I turned that around by ___.",
+  "Right before asking for the deposit, I always ___.",
+  "The prospect asked to see a floor plan we didn't have available. I handled it by ___.",
+  "When a prospect mentions they toured 5 other properties, I ___.",
+  "My follow-up strategy after a no-show guest card is ___.",
+  "The prospect went cold after the tour. I got them back by ___.",
+  "When a lead hasn't responded in 5 days, I reach out with ___.",
+  "My email subject line that actually gets opened is ___.",
+  "The prospect said 'we'll be in touch.' I followed up with ___.",
+  "Instead of a generic follow-up call, I try ___.",
+  "When a prospect says they chose a competitor, I respond with ___.",
+  "The best time to follow up with a prospect is ___.",
+  "My voicemail script that actually gets callbacks includes ___.",
+  "When a prospect goes silent after saying they were ready to apply, I ___.",
+  "I keep my leads warm between tours by ___.",
+  "The one follow-up mistake that kills the deal every time is ___.",
+  "When a prospect says 'the price is too high,' my follow-up strategy is ___.",
+  "I lost a lead because I waited too long to ___.",
+  "My CRM notes after a tour usually just say ___.",
+  "The thing I wish I had said during the tour instead of ___ was something better.",
+  "When the prospect ghosts after a great tour, it's usually because of ___.",
+];
+const WC=[
+  "Asking what their must-haves are before showing anything",
+  "Pointing out storage they didn't ask about",
+  "Letting them stand in silence and 'feel the space'",
+  "Mentioning the neighbors are very quiet (they are not)",
+  "Agreeing with every concern then changing the subject",
+  "Mentioning another prospect is also interested today",
+  "Highlighting the natural light at exactly this time of day",
+  "Skipping straight to the lease paperwork",
+  "Asking 'what would it take to make this your home today?'",
+  "Showing the upgraded unit they can't quite afford",
+  "Walking by the amenities without going in",
+  "Mentioning the free month's rent three times",
+  "Apologizing for the smell and hoping they forget",
+  "Asking about their lifestyle before showing any unit",
+  "Telling them the unit 'just needs a little imagination'",
+  "Using 'cozy' to describe every room under 10x10",
+  "Pointing out how close it is to the highway for easy commuting",
+  "Sending a personalized video recap of the unit after the tour",
+  "Following up with the exact floor plan they asked about",
+  "Creating urgency by sharing real waitlist information",
+  "Asking open-ended questions to uncover the real objection",
+  "Summarizing what they loved before asking them to apply",
+  "Offering to hold the unit for 24 hours while they decide",
+  "Referencing something personal they mentioned during the tour",
+  "A text that just says 'still interested?'",
+  "Waiting exactly 3 business days then calling at 8am",
+  "A follow-up email with 14 attachments",
+  "Sending the same templated email four times in a row",
+  "Calling from a different number hoping they'll pick up",
+  "A voicemail that ends with '...anyway, let me know'",
+  "A personalized email referencing something from the tour",
+  "Sharing a photo of the exact unit they toured",
+  "Reaching out with a new move-in special they qualify for",
+  "Asking a simple question to re-open the conversation",
+  "Texting instead of calling because nobody answers calls",
+  "A follow-up that addresses their exact objection",
+  "Checking in after their self-stated move-in deadline",
+  "Sending a virtual tour link with a personal note",
+  "Referencing their pet's name in the follow-up email",
+  "Asking for feedback even if they chose somewhere else",
+  "Setting a follow-up reminder and actually using it",
+  "A follow-up so generic it could be sent to anyone",
+  "Logging the call in the CRM without actually calling",
+  "Texting a GIF and calling it relationship building",
+  "Copying last month's follow-up and forgetting to change the name",
+  "Marking the lead as lost after one unanswered call",
+  "Following up the same day on three different channels at once",
+  "Leaving a voicemail that is clearly being read off a script",
+  "Sending a 'just checking in' with zero new information",
+  "Responding to their concern about price with a payment breakdown",
+  "Sending a move-in checklist to help them visualize living there",
+  "Asking what their timeline is to create a natural next step",
+  "Noting every preference they mentioned and referencing it later",
+  "Letting three weeks pass and hoping they call back",
+  "Emailing the wrong person entirely",
+  "Accidentally forwarding an internal message to the prospect",
+  "Asking 'did you get my last email?' five times",
+  "Sending availability for a unit that just leased",
+];
+const WC=[
+  "Blaming it on the market","Forgetting they asked about parking",
+  "A very motivational Pinterest quote","Offering free rent on an already-leased unit",
+  "Promising things that aren't in the lease","Reading every line of the lease out loud",
+  "Telling them to Google it","The 'value add' being a fresh coat of beige paint",
+  "A ghost tour of the maintenance team","Aggressively nodding while they talk",
+  "Sending the wrong floor plan","The leasing office being closed during office hours",
+  "That's a great question — let me get back to you (never does)","Calling the competitor 'trash' mid-tour",
+  "Forgetting to turn off the model unit TV","Saying 'it's cozy' about a 400 sq ft studio",
+  "Blaming corporate for literally everything","The dog park that is just a patch of gravel",
+  "An application fee that rivals a car payment","Texting the prospect instead of calling",
+  "Emphasizing the free coffee in the leasing office","Using 'vibrant community' to mean one food truck a month",
+  "Promising a gym that has two broken treadmills","The welcome home package being a single granola bar",
+  "Explaining fair housing by saying 'we treat everyone the same'","Mispronouncing the resident's name for 6 months",
+  "A lease addendum that's just vibes","Offering a move-in special that expired last quarter",
+  "Calling maintenance 'on their way' for three straight days","The amenity reno that's been 'coming soon' since 2019",
+  "A noise complaint resolved with 'we'll look into it'","Showing a unit that wasn't cleaned after the last resident",
+  "5x income requirement for a workforce housing community","Framing the highway overpass as a 'feature'",
+  "A pool that opens June 30th","Forgetting that Fair Housing exists",
+  "A smart home feature that only sometimes works","Using 'character' to describe visible water damage",
+  "Storage units that are really just closets","A lease renewal offer sent 2 weeks before move-out",
+  "Quoting the wrong move-in date","Describing the parking structure view as 'urban'",
+  "Sending the lease to the wrong email","A tour that ends in the dumpster enclosure by mistake",
+  "Posting fake reviews to hit 3.5 stars","A concession that's just a $25 Amazon gift card",
+  "Saying 'I'll have the manager call you' without telling the manager","'What can I do to get you to sign today?'",
+];
+
+// ── UTILS ──
+const sh=a=>{const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
+const gc=()=>{const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s;};
+const toast=(m,d=2500)=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d);};
+window.showScreen=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');};
+window.copyLink=()=>{navigator.clipboard.writeText(document.getElementById('jlink').textContent).then(()=>toast('Link copied!')).catch(()=>{});};
+
+// ── FIREBASE ──
+let db,R,S,G,OV,U,RM,firebaseOK=false;
+async function initFB(){
+  if(NOT_CONFIGURED)return false;
+  try{
+    const{initializeApp}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+    const{getDatabase,ref,set,get,onValue,update,remove}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js");
+    db=getDatabase(initializeApp(FB));R=ref;S=set;G=get;OV=onValue;U=update;RM=remove;firebaseOK=true;return true;
+  }catch(e){console.error(e);return false;}
+}
+
+// ── HOST ──
+let room='',hs={players:[],scores:{},round:0,czarIdx:0,blackDeck:[],whiteDeck:[],hands:{},curBlack:'',subs:{},winPts:5};
+
+window.initHost=async()=>{
+  const ok=await initFB();
+  if(!ok){window.showScreen('title-screen');toast('Set up Firebase first — see instructions below',4000);return;}
+  room=gc();
+  const url=`https://clairtravess.github.io/cards-against-leasing?join=${room}`;
+  document.getElementById('rcode').textContent=room;
+  document.getElementById('jlink').textContent=url;
+  document.getElementById('qrcode').innerHTML='';
+  new QRCode(document.getElementById('qrcode'),{text:url,width:160,height:160,colorDark:'#080808',colorLight:'#f4efe4'});
+  await S(R(db,`rooms/${room}`),{phase:'lobby',players:{},round:0,czarIndex:0,currentBlack:'',submissions:{},winPoints:5,started:false});
+  OV(R(db,`rooms/${room}/players`),snap=>{
+    const d=snap.val()||{};hs.players=Object.keys(d);
+    const el=document.getElementById('pchips');
+    el.innerHTML=hs.players.length?hs.players.map(n=>`<div class="chip"><div class="cdot"></div>${n}</div>`).join(''):'<div class="blink">Waiting for players to join...</div>';
+    document.getElementById('sbtn').disabled=hs.players.length<3;
+    document.getElementById('shint').textContent=hs.players.length<3?`Need ${3-hs.players.length} more player(s)`:`${hs.players.length} players ready!`;
+  });
+  window.showScreen('host-screen');
+};
+
+window.hostStart=async()=>{
+  hs.winPts=parseInt(document.getElementById('wpts').value)||5;
+  hs.blackDeck=sh(BC);hs.whiteDeck=sh(WC);hs.scores={};hs.round=1;hs.czarIdx=0;hs.hands={};
+  hs.players.forEach(p=>{hs.scores[p]=0;hs.hands[p]=hs.whiteDeck.splice(0,7);});
+  const upd={};
+  hs.players.forEach(p=>{upd[`rooms/${room}/hands/${p}`]=hs.hands[p];});
+  upd[`rooms/${room}/winPoints`]=hs.winPts;upd[`rooms/${room}/started`]=true;
+  await U(R(db),upd);
+  window.showScreen('game-host-screen');
+  await startRound();
+};
+
+async function startRound(){
+  hs.subs={};
+  const czar=hs.players[hs.czarIdx%hs.players.length];
+  const black=hs.blackDeck[hs.round%hs.blackDeck.length];
+  hs.curBlack=black;
+  const upd={};
+  hs.players.forEach(p=>{
+    while(hs.hands[p].length<7&&hs.whiteDeck.length>0)hs.hands[p].push(hs.whiteDeck.splice(0,1)[0]);
+    if(!hs.whiteDeck.length)hs.whiteDeck=sh(WC);
+    upd[`rooms/${room}/hands/${p}`]=hs.hands[p];
+  });
+  await U(R(db),upd);
+  await U(R(db,`rooms/${room}`),{phase:'playing',round:hs.round,czar:czar,currentBlack:black,submissions:null,scores:hs.scores,winPoints:hs.winPts});
+  renderHostRound(czar,black);
+  listenSubs();
+}
+
+function renderHostRound(czar,black){
+  document.getElementById('hround').textContent=`Round ${hs.round}`;
+  document.getElementById('hczar').textContent=`⭐ Card Czar: ${czar}`;
+  document.getElementById('hblack').innerHTML=black.replace('___','<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+  document.getElementById('hsbar').style.display='flex';
+  document.getElementById('hschips').innerHTML='';
+  document.getElementById('hjudge').style.display='none';
+  document.getElementById('hrevbtn').style.display='none';
+  const nc=hs.players.filter(p=>p!==czar);
+  document.getElementById('hschips').innerHTML=nc.map(p=>`<div class="sch" id="sch-${btoa(p).replace(/=/g,'')}">${p}</div>`).join('');
+  const czarEl=document.getElementById('hscores');
+  czarEl.innerHTML=hs.players.map(p=>`<div class="sc ${p===czar?'czar':''}"><span>${p}</span><span class="pt">${hs.scores[p]||0}</span></div>`).join('');
+}
+
+let subUnsub=null;
+function listenSubs(){
+  if(subUnsub)subUnsub();
+  const czar=hs.players[hs.czarIdx%hs.players.length];
+  const nc=hs.players.filter(p=>p!==czar);
+  subUnsub=OV(R(db,`rooms/${room}/submissions`),snap=>{
+    const d=snap.val()||{};
+    Object.keys(d).forEach(p=>{
+      const id=`sch-${btoa(p).replace(/=/g,'')}`;
+      const el=document.getElementById(id);
+      if(el)el.className='sch done';
+    });
+    if(nc.length&&Object.keys(d).length>=nc.length){
+      hs.subs=d;
+      document.getElementById('hsbar').style.display='none';
+      document.getElementById('hrevbtn').style.display='inline-flex';
+      if(subUnsub){subUnsub();subUnsub=null;}
+    }
+  });
+}
+
+window.hostReveal=async()=>{
+  document.getElementById('hrevbtn').style.display='none';
+  document.getElementById('hjudge').style.display='block';
+  const entries=sh(Object.entries(hs.subs));
+  document.getElementById('hsgrid').innerHTML=entries.map(([player,card],i)=>`
+    <div class="scard" style="animation-delay:${i*.1}s" data-p="${player}" onclick="pickWinner('${player.replace(/'/g,"\\'")}','${card.replace(/'/g,"\\'")}')">${card}</div>`).join('');
+  await U(R(db,`rooms/${room}`),{phase:'judging'});
+};
+
+window.pickWinner=async(player,card)=>{
+  document.querySelectorAll('.scard').forEach(c=>c.classList.remove('win'));
+  document.querySelector(`.scard[data-p="${player}"]`)?.classList.add('win');
+  setTimeout(async()=>{
+    hs.scores[player]=(hs.scores[player]||0)+1;
+    const idx=hs.hands[player]?.indexOf(card);
+    if(idx>-1)hs.hands[player].splice(idx,1);
+    const sentence=hs.curBlack.replace('___',card);
+    await U(R(db,`rooms/${room}`),{phase:'round-winner',roundWinner:player,roundWinnerCard:card,scores:hs.scores,sentence});
+    document.getElementById('woname').textContent=player;
+    document.getElementById('wocard').textContent=card;
+    document.getElementById('wosen').textContent=sentence;
+    document.getElementById('wo').classList.add('show');
+  },600);
+};
+
+window.nextRound=async()=>{
+  document.getElementById('wo').classList.remove('show');
+  const winner=document.getElementById('woname').textContent;
+  if((hs.scores[winner]||0)>=hs.winPts){
+    await U(R(db,`rooms/${room}`),{phase:'gameover',gameWinner:winner});
+    window.showScreen('gameover-screen');
+    document.getElementById('gowinner').textContent=winner;
+    const sorted=[...hs.players].sort((a,b)=>(hs.scores[b]||0)-(hs.scores[a]||0));
+    document.getElementById('goscores').innerHTML=sorted.map((p,i)=>`
+      <div class="frow ${i===0?'top':''}"><span>${i===0?'🏆 ':''}${p}</span><span>${hs.scores[p]||0} pts</span></div>`).join('');
+  } else {
+    hs.round++;hs.czarIdx=(hs.czarIdx+1)%hs.players.length;
+    await U(R(db,`rooms/${room}`),{phase:'new-round'});
+    await startRound();
+  }
+};
+
+// ── PLAYER ──
+let myName='',myRoom='',mySelected=null,mySubmitted=false,pUnsub=null;
+
+const urlP=new URLSearchParams(location.search);
+const autoCode=urlP.get('join');
+if(autoCode){window.showScreen('join-screen');document.getElementById('jcode').value=autoCode.toUpperCase();}
+
+window.joinGame=async()=>{
+  const name=document.getElementById('jname').value.trim();
+  const code=document.getElementById('jcode').value.trim().toUpperCase();
+  const err=document.getElementById('jerr');err.style.display='none';
+  if(!name){err.textContent='Enter your name!';err.style.display='block';return;}
+  if(!code||code.length<4){err.textContent='Enter the room code!';err.style.display='block';return;}
+  const ok=await initFB();
+  if(!ok){err.textContent='Firebase not configured.';err.style.display='block';return;}
+  const snap=await G(R(db,`rooms/${code}`));
+  if(!snap.exists()){err.textContent='Room not found. Check the code!';err.style.display='block';return;}
+  if(snap.val().started){err.textContent='Game already started!';err.style.display='block';return;}
+  myName=name;myRoom=code;
+  await S(R(db,`rooms/${code}/players/${name}`),{joined:true});
+  window.showScreen('player-wait-screen');
+  document.getElementById('pwname').textContent=name;
+  listenPlayer();
+};
+
+function listenPlayer(){
+  if(pUnsub)pUnsub();
+  pUnsub=OV(R(db,`rooms/${myRoom}`),snap=>{
+    const d=snap.val();if(!d)return;
+    document.getElementById('pwlist').innerHTML=Object.keys(d.players||{}).map(n=>`<div class="chip" style="font-size:11px;"><div class="cdot"></div>${n}</div>`).join('');
+    const ph=d.phase;
+    if(ph==='playing'||ph==='judging'){window.showScreen('player-play-screen');renderPlayer(d);}
+    if(ph==='round-winner'){
+      document.getElementById('woname').textContent=d.roundWinner;
+      document.getElementById('wocard').textContent=d.roundWinnerCard;
+      document.getElementById('wosen').textContent=d.sentence||'';
+      document.getElementById('wo').classList.add('show');
+      mySubmitted=false;mySelected=null;
+    }
+    if(ph==='new-round'){document.getElementById('wo').classList.remove('show');}
+    if(ph==='gameover'){
+      document.getElementById('wo').classList.remove('show');
+      window.showScreen('gameover-screen');
+      document.getElementById('gowinner').textContent=d.gameWinner;
+      const sc=d.scores||{};
+      const sorted=Object.entries(sc).sort((a,b)=>b[1]-a[1]);
+      document.getElementById('goscores').innerHTML=sorted.map(([p,pts],i)=>`
+        <div class="frow ${i===0?'top':''}"><span>${i===0?'🏆 ':''}${p}</span><span>${pts} pts</span></div>`).join('');
+    }
+  });
+}
+
+async function renderPlayer(d){
+  const czar=d.czar,isCzar=myName===czar;
+  document.getElementById('ppname').textContent=myName;
+  document.getElementById('ppround').textContent=`Round ${d.round}`;
+  document.getElementById('pppts').textContent=(d.scores||{})[myName]||0;
+  const bhtml=(d.currentBlack||'').replace('___','<span class="blank">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+  if(isCzar){
+    document.getElementById('pczar').style.display='block';
+    document.getElementById('pnormal').style.display='none';
+    document.getElementById('pczarblack').innerHTML=bhtml;
+  } else {
+    document.getElementById('pczar').style.display='none';
+    document.getElementById('pnormal').style.display='block';
+    document.getElementById('pblack').innerHTML=bhtml;
+    if(mySubmitted){
+      document.getElementById('phand').style.display='none';
+      document.getElementById('psubmit').style.display='none';
+      document.getElementById('psubmsg').style.display='block';
+    } else {
+      document.getElementById('phand').style.display='grid';
+      document.getElementById('psubmsg').style.display='none';
+      const hs2=await G(R(db,`rooms/${myRoom}/hands/${myName}`));
+      const hand=hs2.val()||[];
+      document.getElementById('phand').innerHTML=hand.map((c,i)=>`
+        <div class="wc" id="wc${i}" onclick="pickCard(${i},'${c.replace(/'/g,"\\'")}','${(d.currentBlack||'').replace(/'/g,"\\'")}')">${c}</div>`).join('');
+      document.getElementById('psubmit').style.display='none';
+      document.getElementById('ppreview').textContent='Select a card below to preview...';
+      document.getElementById('ppreview').style.color='#aaa';
+    }
+  }
+}
+
+window.pickCard=(i,card,black)=>{
+  document.querySelectorAll('.wc').forEach(c=>c.classList.remove('sel'));
+  document.getElementById(`wc${i}`)?.classList.add('sel');
+  mySelected=card;
+  document.getElementById('ppreview').innerHTML=black.replace('___',`<strong>${card}</strong>`);
+  document.getElementById('ppreview').style.color='var(--white)';
+  document.getElementById('psubmit').style.display='inline-flex';
+};
+
+window.submitCard=async()=>{
+  if(!mySelected){toast('Select a card first!');return;}
+  await S(R(db,`rooms/${myRoom}/submissions/${myName}`),mySelected);
+  mySubmitted=true;
+  document.getElementById('phand').style.display='none';
+  document.getElementById('psubmit').style.display='none';
+  document.getElementById('psubmsg').style.display='block';
+};
+</script>
+</body>
+</html>
